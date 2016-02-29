@@ -1,10 +1,10 @@
 /*****************************************************************************/
-//  @file   CC112x_spi.h  
-//  
+//  @file   CC112x_spi.h
+//
 //  @brief  header file that defines a minimum set of neccessary functions
-//          to communicate with CC112X over SPI as well as the regsister 
-//          mapping. 
-//				 
+//          to communicate with CC112X over SPI as well as the regsister
+//          mapping.
+//
 //  Copyright (C) 2013 Texas Instruments Incorporated - http://www.ti.com/
 //
 //  Redistribution and use in source and binary forms, with or without
@@ -38,18 +38,10 @@
 #ifndef CC112x_SPI_H
 #define CC112x_SPI_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 /******************************************************************************
  * INCLUDES
  */
 #include "hal_types.h"
-#ifdef MSP_EXP430G2
-  #include "hal_msp_exp430g2_spi.h"
-#else
-  #include "hal_spi_rf_trxeb.h"  
-#endif
 
 /******************************************************************************
  * CONSTANTS
@@ -164,7 +156,7 @@ extern "C" {
 #define CC112X_ANALOG_SPARE             0x2F38
 #define CC112X_PA_CFG3                  0x2F39
 #define CC112X_IRQ0M                    0x2F3F
-#define CC112X_IRQ0F                    0x2F40 
+#define CC112X_IRQ0F                    0x2F40
 
 /* Status Registers */
 #define CC112X_WOR_TIME1                0x2F64
@@ -227,18 +219,18 @@ extern "C" {
 #define CC112X_ATEST_LVDS               0x2F9D
 #define CC112X_ATEST_MODE               0x2F9E
 #define CC112X_XOSC_TEST1               0x2F9F
-#define CC112X_XOSC_TEST0               0x2FA0  
-                                        
-#define CC112X_RXFIRST                  0x2FD2   
-#define CC112X_TXFIRST                  0x2FD3   
-#define CC112X_RXLAST                   0x2FD4 
-#define CC112X_TXLAST                   0x2FD5 
-#define CC112X_NUM_TXBYTES              0x2FD6  /* Number of bytes in TXFIFO */ 
-#define CC112X_NUM_RXBYTES              0x2FD7  /* Number of bytes in RXFIFO */
-#define CC112X_FIFO_NUM_TXBYTES         0x2FD8  
-#define CC112X_FIFO_NUM_RXBYTES         0x2FD9  
+#define CC112X_XOSC_TEST0               0x2FA0
 
-                                                                                                                                                
+#define CC112X_RXFIRST                  0x2FD2
+#define CC112X_TXFIRST                  0x2FD3
+#define CC112X_RXLAST                   0x2FD4
+#define CC112X_TXLAST                   0x2FD5
+#define CC112X_NUM_TXBYTES              0x2FD6  /* Number of bytes in TXFIFO */
+#define CC112X_NUM_RXBYTES              0x2FD7  /* Number of bytes in RXFIFO */
+#define CC112X_FIFO_NUM_TXBYTES         0x2FD8
+#define CC112X_FIFO_NUM_RXBYTES         0x2FD9
+
+
 /* DATA FIFO Access */
 #define CC112X_SINGLE_TXFIFO            0x003F      /*  TXFIFO  - Single accecss to Transmit FIFO */
 #define CC112X_BURST_TXFIFO             0x007F      /*  TXFIFO  - Burst accecss to Transmit FIFO  */
@@ -282,17 +274,14 @@ extern "C" {
 
 /******************************************************************************
  * PROTPTYPES
- */ 
+ */
 
 /* basic set of access functions */
-rfStatus_t cc112xSpiReadReg(uint16 addr, uint8 *data, uint8 len);
+rfStatus_t cc112xSpiReadReg(uint16_t addr, uint8_t *data, uint8_t len);
 rfStatus_t cc112xGetTxStatus(void);
-rfStatus_t cc112xGetRxStatus(void);  
-rfStatus_t cc112xSpiWriteReg(uint16 addr, uint8 *data, uint8 len);
-rfStatus_t cc112xSpiWriteTxFifo(uint8 *pWriteData, uint8 len);
-rfStatus_t cc112xSpiReadRxFifo(uint8 *pReadData, uint8 len);
+rfStatus_t cc112xGetRxStatus(void);
+rfStatus_t cc112xSpiWriteReg(uint16_t addr, uint8_t *data, uint8_t len);
+rfStatus_t cc112xSpiWriteTxFifo(uint8_t *pWriteData, uint8_t len);
+rfStatus_t cc112xSpiReadRxFifo(uint8_t *pReadData, uint8_t len);
 
-#ifdef  __cplusplus
-}
-#endif
 #endif// CC112x_SPI_H
