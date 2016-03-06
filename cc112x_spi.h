@@ -268,20 +268,27 @@
 #define CC112X_STATE_RXFIFO_ERROR       0x60
 #define CC112X_STATE_TXFIFO_ERROR       0x70
 
+#ifndef uint8_t
+typedef unsigned char uint8_t;
+#endif
+#ifndef uint16_t
+typedef unsigned short uint16_t;
+#endif
 
+union cc1120_status {
+  struct {
+    uint8_t reserved : 4;
+    uint8_t STATE : 3;
+    uint8_t CHIP_RDY : 1;
+  } fields;
+  uint8_t value;
+};
 
+#define RADIO_BURST_ACCESS   0x40
+#define RADIO_SINGLE_ACCESS  0x00
+#define RADIO_READ_ACCESS    0x80
+#define RADIO_WRITE_ACCESS   0x00
 
-
-/******************************************************************************
- * PROTPTYPES
- */
-
-/* basic set of access functions */
-rfStatus_t cc112xSpiReadReg(uint16_t addr, uint8_t *data, uint8_t len);
-rfStatus_t cc112xGetTxStatus(void);
-rfStatus_t cc112xGetRxStatus(void);
-rfStatus_t cc112xSpiWriteReg(uint16_t addr, uint8_t *data, uint8_t len);
-rfStatus_t cc112xSpiWriteTxFifo(uint8_t *pWriteData, uint8_t len);
-rfStatus_t cc112xSpiReadRxFifo(uint8_t *pReadData, uint8_t len);
+typedef uint8_t rfStatus_t;
 
 #endif// CC112x_SPI_H
