@@ -1,3 +1,4 @@
+#if 0
 #include <mbed.h>
 
 #include "hal_types.h"
@@ -62,7 +63,7 @@ rfStatus_t trxSpiCmdStrobe(uint8_t cmd) {
   rfStatus_t out;
 
   radioSpiCs = 0;
-  out = radioSpi.write(RADIO_READ_ACCESS | cmd);
+  out = radioSpi.write(cmd);
   radioSpiCs = 1;
 
   return out;
@@ -81,11 +82,11 @@ void trxReadWriteBurstSingle(uint8_t addr, uint8_t* pData, uint16_t len) {
   } else {
     if (addr & RADIO_BURST_ACCESS) {
       for (int i=0; i < len; i++) {
-        *pData = radioSpi.write(0x00);
+        radioSpi.write(*pData);
         pData++;
       }
     } else {
-      *pData = radioSpi.write(0x00);
+      radioSpi.write(*pData);
     }
   }
 }
@@ -93,3 +94,5 @@ void trxReadWriteBurstSingle(uint8_t addr, uint8_t* pData, uint16_t len) {
 void halRfWriteReg(uint16_t addr, uint8_t data) {
   cc112xSpiWriteReg(addr, &data, 1);
 }
+
+#endif
