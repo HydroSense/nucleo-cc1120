@@ -1,4 +1,3 @@
-#include "hal_types.h"
 #include "cc112x_spi.h"
 
 #include "CC1120.hpp"
@@ -234,7 +233,11 @@ int CC1120::enableFastTransmit() {
 }
 
 int CC1120::pushTxFifo(const char *data, uint8_t nBytes) {
-  return this->regAccess(RADIO_WRITE_ACCESS, CC112X_BURST_TXFIFO, (uint8_t*)data, nBytes);
+  this->regAccess(RADIO_WRITE_ACCESS, CC112X_BURST_TXFIFO, &nBytes, 1);
+  this->regAccess(RADIO_WRITE_ACCESS, CC112X_BURST_TXFIFO, (uint8_t*)data, nBytes);
+
+  CC1120Errno = OK;
+  return nBytes;
 }
 
 int CC1120::strobeTransmit() {

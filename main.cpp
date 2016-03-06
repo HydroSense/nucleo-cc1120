@@ -37,19 +37,41 @@ int main() {
   // set the RX off mode to go into the idle state
   radio.setRxOffMode(0x00);
 
+  // set the TX off mode to go into the RX state
+  radio.setTxOffMode(0x03);
+
   // enter loop
-  char data[16] = {'\0'};
-  while(1) {
+  char sendData[16] = "testing123";
+  char recvData[16] = {'\0'};
+  for(int i=0; ; i++) {
     printf("Top of loop...\r\n");
+    if (i % 10 == 0) {
+      // wake up by getting state
+      while(radio.getState() != CC1120_STATE_IDLE) {
+        wait(0.01);
+      }
 
-    radio.strobeReceive();
-    while(radio.getState() != CC1120_STATE_IDLE) {
-      wait(0.01);
+
+      printf("sending...");
+      radio.pushTxFifo(sendData, strlen(sendData));
+      radio.strobeTransmit();
+      printf("done!\r\n");
+
+      // keep waiting until we are idle
+      while(radio.getState() != CC1120_STATE_IDLE) {
+        wait(0.01);
+      }
+
+      printf("packet received!\r\n");
+      int res = radio.popRxFifo(recvData, 16);
+      recvData[res] = '\0';
+      printf("data: %s\r\n", recvData);
+
+      // put the radio into deep sleep mode
+      radio.deepSleep();
+    } else{
+      printf("wait: %d\r\n", i);
     }
-
-    int res = radio.popRxFifo(data, 16);
-    data[res] = '\0';
-    printf("data: %s\r\n", data);
 
     wait(0.5);
   }

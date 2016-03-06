@@ -3,7 +3,6 @@
 
 #include <mbed.h>
 
-#include "hal_types.h"
 #include "cc112x_spi.h"
 
 struct CC1120Info {
