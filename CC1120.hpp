@@ -35,10 +35,10 @@ extern CC1120Error CC1120Errno;
 
 class CC1120 {
 private:
-  SPI mRadioSpi;
-  DigitalOut mRadioSpiCs;
+  SPI& mRadioSpi;
+  DigitalOut& mRadioSpiCs;
+  DigitalOut& mRadioReset;
 
-  DigitalOut mRadioReset;
   CC1120State mRadioState;
 
   void flushTxFifo(void);
@@ -49,7 +49,8 @@ private:
   void readWriteBurst(uint8_t type, uint8_t* pData, uint8_t len);
 
 public:
-  CC1120(PinName spiMosiPin, PinName spiMisoPin, PinName spiSClkPin, PinName spiCSPin, PinName resetPin);
+  //CC1120(PinName spiMosiPin, PinName spiMisoPin, PinName spiSClkPin, PinName spiCSPin, PinName resetPin);
+  CC1120(SPI& radioSpi, DigitalOut& spiCsPin, DigitalOut& resetPin);
 
   // starting and ending associated interfaces
   void begin(void);
@@ -64,10 +65,6 @@ public:
   int sleep(void);
   int deepSleep(void);
   int calibrate(void);
-
-  // synchronous packet transmission
-  int sendSync(const char* data, uint8_t nBytes);
-  int recvSync(char* data, uint8_t nBytes);
 
   // asynchronous packet transmission
   int enableFastTransmit(void);
