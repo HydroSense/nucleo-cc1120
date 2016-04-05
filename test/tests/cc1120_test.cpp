@@ -397,3 +397,39 @@ TEST_F(CC1120Test, pushTxFifoBufferOccupied) {
   EXPECT_LT(res, 0);
   EXPECT_EQ(CC1120Errno, FIFO_OVERFLOW);
 }
+
+TEST_F(CC1120Test, strobeTransmitValidState) {
+  {
+    InSequence sequence;
+
+    EXPECT_CALL(mockSpi, write(CC112X_SNOP))
+      .WillOnce(Return(CC1120_STATE_IDLE));
+    EXPECT_CALL(mockSpi, write(CC112X_STX));
+  }
+
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(AtLeast(2));
+
+  int res = radio->strobeTransmit();
+  EXPECT_EQ(res, 0);
+  EXPECT_EQ(CC1120Errno, OK);
+}
+
+TEST_F(CC1120Test, strobeTransmitBadState) {
+  {
+    InSequence sequence;
+
+    EXPECT_CALL(mockSpi, write(CC112X_SNOP))
+      .WillOnce(Return(CC1120_STATE_TX_FIFO_ERROR));
+  }
+
+  EXPECT_CALL(mockSpi, write(CC112X_STX))
+    .Times(0);
+
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(AtLeast(2));
+
+  int res = radio->strobeTransmit();
+  EXPECT_LT(res, 0);
+  EXPECT_EQ(CC1120Errno, BAD_STATE);
+}
