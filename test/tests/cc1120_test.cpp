@@ -8,8 +8,10 @@
 
 using ::testing::AtLeast;
 using ::testing::Return;
+using ::testing::AnyNumber;
 using ::testing::_;
 using ::testing::Sequence;
+using ::testing::InSequence;
 
 class CC1120Test : public ::testing::Test {
 protected:
@@ -240,3 +242,151 @@ TEST_F(CC1120Test, deepSleepInvalidState) {
   ASSERT_NE(res, 0);
   ASSERT_EQ(CC1120Errno, BAD_STATE);
 }
+
+TEST_F(CC1120Test, calibrate) {
+  EXPECT_CALL(mockSpi, write(_))
+    .Times(AnyNumber());
+  EXPECT_CALL(mockSpi, write(CC112X_SNOP))
+    .WillOnce(Return(CC1120_STATE_IDLE));
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(AtLeast(2));
+
+  int res = radio->calibrate();
+  ASSERT_EQ(res, 0);
+  ASSERT_EQ(CC1120Errno, OK);
+}
+
+TEST_F(CC1120Test, calibrateInvalidState) {
+  EXPECT_CALL(mockSpi, write(_))
+    .Times(AnyNumber());
+  EXPECT_CALL(mockSpi, write(CC112X_SNOP))
+    .WillOnce(Return(CC1120_STATE_RECEIVE));
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(AtLeast(2));
+
+  int res = radio->calibrate();
+  ASSERT_NE(res, 0);
+  ASSERT_EQ(CC1120Errno, BAD_STATE);
+}
+
+TEST_F(CC1120Test, enableFastTransmitFromIdle) {
+  EXPECT_CALL(mockSpi, write(_))
+    .Times(AnyNumber());
+  EXPECT_CALL(mockSpi, write(CC112X_SNOP))
+    .WillOnce(Return(CC1120_STATE_IDLE));
+  EXPECT_CALL(mockSpi, write(CC112X_SFSTXON));
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(AtLeast(2));
+
+  int res = radio->enableFastTransmit();
+  ASSERT_EQ(res, 0);
+  ASSERT_EQ(CC1120Errno, OK);
+}
+
+TEST_F(CC1120Test, enableFastTransmitFromRecieve) {
+  EXPECT_CALL(mockSpi, write(_))
+    .Times(AnyNumber());
+  EXPECT_CALL(mockSpi, write(CC112X_SNOP))
+    .WillOnce(Return(CC1120_STATE_RECEIVE));
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(AtLeast(2));
+
+  int res = radio->enableFastTransmit();
+  ASSERT_EQ(res, 0);
+  ASSERT_EQ(CC1120Errno, OK);
+}
+
+TEST_F(CC1120Test, fastTransmitInvalidState) {
+  EXPECT_CALL(mockSpi, write(CC112X_SNOP))
+    .WillOnce(Return(CC1120_STATE_CALIBRATE));
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(AtLeast(2));
+
+  int res = radio->calibrate();
+  ASSERT_NE(res, 0);
+  ASSERT_EQ(CC1120Errno, BAD_STATE);
+}
+
+TEST_F(CC1120Test, pushTxFifo) {
+  char data[] = "\12test message";
+  int dataLen = strlen(data);
+
+  {
+    InSequence sequence;
+
+    EXPECT_CALL(mockSpi, write(RADIO_READ_ACCESS|RADIO_BURST_ACCESS|(CC112X_FIFO_NUM_TXBYTES>> 8)))
+    EXPECT_CALL(mockSpi, write(CC112X_FIFO_NUM_TXBYTES&0xFF));
+    EXPECT_CALL(mockSpi, write(CC112X_BURST_TXFIFO));
+
+    for (int i = 0; i < dataLen; i++) {
+      EXPECT_CALL(mockSpi, write(data[i]));
+    }
+  }
+
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(AtLeast(2));
+
+  int res = radio->pushTxFifo(data, dataLen);
+  EXPECT_EQ(res, dataLen);
+}
+
+TEST_F(CC1120Test, pushTxFifoNoData) {
+  char data[] = "";
+  int dataLen = strlen(data);
+
+  // make sure we don't bother the radio
+  EXPECT_CALL(mockSpi, write(_))
+    .Times(0);
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(0);
+
+  int res = radio->pushTxFifo(data, dataLen);
+  EXPECT_EQ(res, dataLen);
+}
+
+TEST_F(CC1120Test, pushTxFifoTooLargeBuffer) {
+  char data[] =
+    "asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle";
+  int dataLen = strlen(data);
+
+  // make sure we don't bother the radio
+  EXPECT_CALL(mockSpi, write(_))
+    .Times(0);
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(0);
+
+  int res = radio->pushTxFifo(data, dataLen);
+  EXPECT_LT(res, 0);
+  EXPECT_EQ(CC1120Errno, FIFO_OVERFLOW);
+}
+
+/*
+TEST_F(CC1120Test, pushTxFifoMulticallOverflow) {
+  int fifoSize = 256;
+  char data[] =
+    "asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle\
+    asldkjflkasdjfklasjdflkjljkjajle";
+  int dataLen = strlen(data);
+
+  {
+    InSequence sequence;
+
+    EXPECT_CALL(mockSpi, write(CC112X_FIFO_NUM_TXBYTES)
+      .WillOnce(Return(5));
+  }
+}
+*/

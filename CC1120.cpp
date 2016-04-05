@@ -1,7 +1,7 @@
 #include "cc112x_spi.h"
 #include "CC1120.hpp"
 
-CC1120Error CC1120Errno;
+CC1120Error CC1120Errno = BAD_STATE;
 
 /* Private Functions */
 
@@ -179,7 +179,19 @@ int CC1120::enableFastTransmit() {
 }
 
 int CC1120::pushTxFifo(const char *data, uint8_t nBytes) {
-  this->regAccess(RADIO_WRITE_ACCESS, CC112X_BURST_TXFIFO, &nBytes, 1);
+  if (nBytes == 0) {
+    return 0;
+  } else if (nBytes > CC1120_FIFO_SIZE) {
+    return 0;
+  }
+
+  // get the number of TX bytes
+  unsigned char availableBytes;
+  this->regAccess(RADIO_READ_ACCESS, CC112X_FIFO_NUM_TXBYTES, (uint8_t*)&availableBytes, 1);
+  if (availableBytes < nBytes) {
+    return 0;
+  }
+
   this->regAccess(RADIO_WRITE_ACCESS, CC112X_BURST_TXFIFO, (uint8_t*)data, nBytes);
 
   CC1120Errno = OK;

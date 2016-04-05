@@ -5,6 +5,8 @@
 
 #include "cc112x_spi.h"
 
+#define CC1120_FIFO_SIZE 128
+
 struct CC1120Info {
   unsigned int partNumber;
   unsigned int partVersion;
@@ -29,7 +31,8 @@ enum CC1120Error {
   BAD_STATE,
   BAD_REG_ACCESS,
   BAD_PARAMETER,
-  BAD_BUFFER
+  BAD_BUFFER,
+  FIFO_OVERFLOW
 };
 extern CC1120Error CC1120Errno;
 
