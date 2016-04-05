@@ -314,10 +314,12 @@ TEST_F(CC1120Test, pushTxFifo) {
   {
     InSequence sequence;
 
-    EXPECT_CALL(mockSpi, write(RADIO_READ_ACCESS|RADIO_BURST_ACCESS|(CC112X_FIFO_NUM_TXBYTES>> 8)))
-    EXPECT_CALL(mockSpi, write(CC112X_FIFO_NUM_TXBYTES&0xFF));
-    EXPECT_CALL(mockSpi, write(CC112X_BURST_TXFIFO));
+    EXPECT_CALL(mockSpi, write(RADIO_READ_ACCESS|RADIO_BURST_ACCESS|0x2F));
+    EXPECT_CALL(mockSpi, write(CC112X_FIFO_NUM_TXBYTES & 0x00FF));
+    EXPECT_CALL(mockSpi, write(0x00))
+      .WillOnce(Return(128));
 
+    EXPECT_CALL(mockSpi, write(RADIO_WRITE_ACCESS|CC112X_BURST_TXFIFO));
     for (int i = 0; i < dataLen; i++) {
       EXPECT_CALL(mockSpi, write(data[i]));
     }
@@ -359,6 +361,7 @@ TEST_F(CC1120Test, pushTxFifoTooLargeBuffer) {
     asldkjflkasdjfklasjdflkjljkjajle\
     asldkjflkasdjfklasjdflkjljkjajle";
   int dataLen = strlen(data);
+  EXPECT_GT(dataLen, 0x128);
 
   // make sure we don't bother the radio
   EXPECT_CALL(mockSpi, write(_))
@@ -371,22 +374,26 @@ TEST_F(CC1120Test, pushTxFifoTooLargeBuffer) {
   EXPECT_EQ(CC1120Errno, FIFO_OVERFLOW);
 }
 
-/*
-TEST_F(CC1120Test, pushTxFifoMulticallOverflow) {
-  int fifoSize = 256;
+TEST_F(CC1120Test, pushTxFifoBufferOccupied) {
   char data[] =
     "asldkjflkasdjfklasjdflkjljkjajle\
-    asldkjflkasdjfklasjdflkjljkjajle\
-    asldkjflkasdjfklasjdflkjljkjajle\
-    asldkjflkasdjfklasjdflkjljkjajle\
     asldkjflkasdjfklasjdflkjljkjajle";
   int dataLen = strlen(data);
+  EXPECT_LT(dataLen, 0x128);
 
   {
     InSequence sequence;
 
-    EXPECT_CALL(mockSpi, write(CC112X_FIFO_NUM_TXBYTES)
+    EXPECT_CALL(mockSpi, write(RADIO_READ_ACCESS|RADIO_BURST_ACCESS|0x2F));
+    EXPECT_CALL(mockSpi, write(CC112X_FIFO_NUM_TXBYTES & 0x00FF));
+    EXPECT_CALL(mockSpi, write(0x00))
       .WillOnce(Return(5));
   }
+
+  EXPECT_CALL(mockSpiCs, write(_))
+    .Times(AtLeast(2));
+
+  int res = radio->pushTxFifo(data, dataLen);
+  EXPECT_LT(res, 0);
+  EXPECT_EQ(CC1120Errno, FIFO_OVERFLOW);
 }
-*/
